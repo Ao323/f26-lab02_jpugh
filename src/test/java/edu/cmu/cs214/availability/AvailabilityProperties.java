@@ -1,8 +1,10 @@
 package edu.cmu.cs214.availability;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.util.List;
+import edu.cmu.cs214.availability.AvailabilityProperties.Scenario;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.Combinators;
@@ -34,16 +36,53 @@ class AvailabilityProperties {
     }
 
     // --- Milestone 1: add your stronger property here ---
+    @Property
+    void allSlots(@ForAll("scenarios") Scenario s) {
+        List<TimeInterval> freeSlots =
+            calc.freeSlots(s.dayStart(), s.dayEnd(), s.bookings());
 
+        for (int minute = s.dayStart(); minute < s.dayEnd(); minute++) {
+            boolean isBooked = false;
+            boolean isFree = false;
+
+            for (TimeInterval booking : s.bookings()) {
+                if(booking.start() <= minute && minute < booking.end()) {
+                    isBooked = true;
+                }
+            }
+
+            for (TimeInterval freeSlot : freeSlots) {
+                if(freeSlot.start() <= minute && minute < freeSlot.end()) {
+                    isFree = true;
+                }
+            }
+
+            int min = minute;
+
+            if(isBooked && isFree) {
+                assertFalse(isBooked && isFree,
+                    () -> "minute " + min + " is both booked and free");
+            } else if (!isBooked && !isFree) {
+                assertFalse(!isBooked && !isFree,
+                    () -> "minute " + min + " is neither booked nor free");
+            }
+        }
+    }
+    
     /** Generates a business day plus a list of bookings (possibly unsorted, overlapping, or outside hours). */
     @Provide
     Arbitrary<Scenario> scenarios() {
         Arbitrary<Integer> minutes = Arbitraries.integers().between(0, 1440);
+
         Arbitrary<TimeInterval> intervals = Combinators.combine(minutes, minutes)
             .as((a, b) -> new TimeInterval(Math.min(a, b), Math.max(a, b) + 1));
+
         Arbitrary<List<TimeInterval>> bookings = intervals.list().ofMaxSize(6);
+
+
         return Combinators.combine(minutes, minutes, bookings)
             .as((a, b, bk) -> new Scenario(Math.min(a, b), Math.max(a, b) + 1, bk));
+
     }
 
     record Scenario(int dayStart, int dayEnd, List<TimeInterval> bookings) {
