@@ -29,12 +29,18 @@ public class AvailabilityCalculator {
 
         List<TimeInterval> free = new ArrayList<>();
         int cursor = dayStart;
+
         for (TimeInterval b : clipped) {
             if (b.start() > cursor) {
                 free.add(new TimeInterval(cursor, b.start()));
             }
             cursor = Math.max(cursor, b.end());
         }
+
+        if(cursor != dayEnd) {
+            free.add(new TimeInterval(cursor, dayEnd));
+        }
+        
         return free;
     }
 }
