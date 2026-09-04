@@ -15,6 +15,7 @@ public class AvailabilityCalculator {
      * Returns the free gaps in {@code [dayStart, dayEnd)} not covered by any booking,
      * in order. Bookings may be unsorted, may overlap each other, and may extend
      * outside business hours; they are clipped to the day and merged.
+     * testing
      */
     public List<TimeInterval> freeSlots(int dayStart, int dayEnd, List<TimeInterval> bookings) {
         List<TimeInterval> clipped = new ArrayList<>();
@@ -40,6 +41,8 @@ public class AvailabilityCalculator {
         if(cursor != dayEnd) {
             free.add(new TimeInterval(cursor, dayEnd));
         }
+
+
         
         return free;
     }
